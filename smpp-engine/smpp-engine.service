@@ -1,0 +1,21 @@
+[Unit]
+Description=SMPP Engine
+After=network.target postgresql.service redis.service rabbitmq-server.service
+Wants=postgresql.service redis.service rabbitmq-server.service
+
+[Service]
+Type=simple
+User=smpp
+Group=smpp
+WorkingDirectory=/opt/smpp-platform/smpp-engine
+Environment="PATH=/opt/smpp-platform/smpp-engine/venv/bin:/usr/local/bin:/usr/bin"
+EnvironmentFile=/opt/smpp-platform/smpp-engine/.env
+ExecStart=/opt/smpp-platform/smpp-engine/venv/bin/python -m smpp_engine
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: smpp-postgres
+    environment:
+      POSTGRES_DB: smpp_platform
+      POSTGRES_USER: smpp
+      POSTGRES_PASSWORD: smpp_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./laravel/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smpp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smpp-redis
+    command: redis-server --protected-mode yes --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: smpp-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: smpp
+      RABBITMQ_DEFAULT_PASS: smpp_password
+      RABBITMQ_VHOST: /smpp
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: smpp-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./laravel/public:/var/www/html:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - laravel
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  laravel:
+    build:
+      context: ./laravel
+      dockerfile: Dockerfile
+    container_name: smpp-laravel
+    environment:
+      DB_HOST: postgres
+      DB_DATABASE: smpp_platform
+      DB_USERNAME: smpp
+      DB_PASSWORD: smpp_password
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: smpp
+      RABBITMQ_PASSWORD: smpp_password
+      APP_ENV: local
+      APP_DEBUG: "true"
+    volumes:
+      - ./laravel:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  smpp-engine:
+    build:
+      context: ./smpp-engine
+      dockerfile: Dockerfile
+    container_name: smpp-python
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: smpp
+      RABBITMQ_PASSWORD: smpp_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_DB: smpp_platform
+      POSTGRESQL_USER: smpp
+      POSTGRESQL_PASSWORD: smpp_password
+    ports:
+      - "2775:2775"
+    volumes:
+      - ./smpp-engine:/app
+    depends_on:
+      - rabbitmq
+      - redis
+      - postgres
+
+  smpp-mock:
+    build:
+      context: ./smpp-mock
+      dockerfile: Dockerfile
+    container_name: smpp-mock
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: smpp
+      RABBITMQ_PASSWORD: smpp_password
+    ports:
+      - "2776:2775"
+    volumes:
+      - ./smpp-mock:/app
+    depends_on:
+      - rabbitmq
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: smpp-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - smpp-engine
+
+  grafana:
+    image: grafana/grafana:10-enterprise
+    container_name: smpp-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  grafana_data:

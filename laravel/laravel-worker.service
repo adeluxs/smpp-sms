@@ -1,0 +1,15 @@
+[Unit]
+Description=Laravel Queue Worker
+After=network.target
+
+[Service]
+Type=simple
+User=smpp
+WorkingDirectory=/opt/smpp-platform/laravel
+ExecStart=/usr/bin/php artisan horizon
+Restart=always
+RestartSec=5
+Environment="APP_ENV=production"
+
+[Install]
+WantedBy=multi-user.target

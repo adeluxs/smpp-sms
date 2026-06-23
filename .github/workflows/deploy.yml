@@ -1,0 +1,80 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: smpp_test
+          POSTGRES_USER: smpp
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s
+          --health-retries 5
+        ports: ["5432:5432"]
+      
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+      
+      rabbitmq:
+        image: rabbitmq:3-management-alpine
+        env:
+          RABBITMQ_DEFAULT_USER: smpp
+          RABBITMQ_DEFAULT_PASS: test
+        ports: ["5672:5672", "15672:15672"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo-pgsql, redis
+
+      - name: Install PHP deps
+        run: cd laravel && composer install --no-interaction
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: cd smpp-engine && pip install -e .
+
+      - name: Run PHP tests
+        run: cd laravel && vendor/bin/phpunit
+
+      - name: Run Python tests
+        env:
+          RABBITMQ_HOST: localhost
+          RABBITMQ_PORT: 5672
+          RABBITMQ_USER: smpp
+          RABBITMQ_PASSWORD: test
+        run: cd smpp-engine && pytest tests/test_unit.py -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/smpp-platform
+            ./scripts/deploy.sh
