@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console;
+namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Wallet;
