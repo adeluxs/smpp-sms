@@ -33,7 +33,7 @@
 6. **Systemd Services**
    ```bash
    cp smpp-engine/smpp-engine.service /etc/systemd/system/
-   cp laravel/laravel-worker.service /etc/systemd/system/
+   cp laravel/laravel-smpp-worker.service /etc/systemd/system/
    systemctl daemon-reload
    systemctl enable --now smpp-engine laravel-worker
    ```

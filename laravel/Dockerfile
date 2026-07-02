@@ -1,20 +1,8 @@
 FROM php:8.2-fpm-alpine
 
-RUN apk add --no-cache \
-    git \
-    zip \
-    unzip \
-    libpq-dev \
-    postgresql-dev \
-    icu-dev \
-    oniguruma-dev
-
-RUN docker-php-ext-install \
-    pdo_pgsql \
-    pgsql \
-    bcmath \
-    intl \
-    mbstring
+# For PHP 8.4+, use: php:8.4-fpm-alpine
+RUN apk add --no-cache git zip unzip libpq-dev icu-dev oniguruma-dev && \
+    docker-php-ext-install pdo_pgsql pgsql bcmath intl mbstring
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

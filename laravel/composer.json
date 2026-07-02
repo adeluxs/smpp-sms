@@ -5,14 +5,9 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.0",
-        "laravel/telescope": "^5.0",
-        "spatie/laravel-activitylog": "^4.0",
         "spatie/laravel-permission": "^6.0",
-        "laravel/fortify": "^1.0",
-        "laravel/breeze": "^1.0",
+        "spatie/laravel-activitylog": "^4.0",
         "predis/predis": "^2.0",
-        "vlucas/phpdotenv": "^5.6",
-        "nesbot/carbon": "^3.0",
         "guzzlehttp/guzzle": "^7.0"
     },
     "require-dev": {
@@ -34,14 +29,8 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true,
-        "allow-plugins": {
-            "composer/package-versions-dev": true,
-            "php-http/discovery": true,
-            "php-http/guzzle6-adapter": true,
-            "ralouphie/getidiomatic": true
-        }
+        "sort-packages": true
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
