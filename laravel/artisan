@@ -4,7 +4,7 @@ use Illuminate\Foundation\Application;
 
 define('LARAVEL_START', microtime(true));
 
-$app = require_once __DIR__.'/../bootstrap/app.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
