@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Jobs\ProcessMessageSubmission;
-use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
-class Api\V1\SmsController extends Controller
+class SmsController extends Controller
 {
     public function send(Request $request): JsonResponse
     {
@@ -24,7 +23,6 @@ class Api\V1\SmsController extends Controller
         }
 
         $tenant = $request->user();
-
         $messageId = Str::uuid();
         $price = $this->calculatePrice($request->input('to'));
 

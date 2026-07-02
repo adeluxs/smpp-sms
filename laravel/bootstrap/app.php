@@ -2,8 +2,8 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Log;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure()
     ->withRouting(
@@ -14,11 +14,5 @@ return Application::configure()
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web();
         $middleware->api();
-    })
-    ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->report();
-    })
-    ->withLog(function (Log $log) {
-        $log->errors();
     })
     ->create();

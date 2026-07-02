@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Observes;
+namespace App\Observers;
 
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;

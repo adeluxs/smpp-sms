@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console;
 
+use Illuminate\Console\Command;
 use App\Models\Wallet;
 use App\Models\Tenant;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class WalletSync extends Command

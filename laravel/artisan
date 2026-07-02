@@ -1,23 +1,15 @@
 <?php
 
-#!/usr/bin/env php
-<?php
-
 use Illuminate\Foundation\Application;
 
 define('LARAVEL_START', microtime(true));
-
-require __DIR__.'/vendor/autoload.php';
 
 $app = require_once __DIR__.'/bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-$status = $kernel->handle(
+exit($kernel->handle(
     $argv = $GLOBALS['argv'],
     $argc = $GLOBALS['argc']
-);
-
-$kernel->terminate($argv, $status);
-exit($status);
+) ? 0 : 1);
